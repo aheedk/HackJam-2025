@@ -69,29 +69,51 @@ function MapView() {
     }
   };
 
-  // Group events by location
-  const eventsByLocation = events.reduce((acc, event) => {
-    const key = `${event.coordinates.lat}-${event.coordinates.lng}`;
-    if (!acc[key]) {
-      acc[key] = {
-        coordinates: event.coordinates,
-        events: []
-      };
+  // Helper function to check if event has a valid location
+  const hasValidLocation = (event) => {
+    // Check if location exists and is not a placeholder
+    const location = event.location ? event.location.trim() : '';
+    
+    if (!location || 
+        location.toLowerCase().includes('private location') ||
+        location.toLowerCase().includes('sign in to display') ||
+        location === '' ||
+        location === 'USF Tampa Campus' ||
+        location.toUpperCase() === 'TBD' ||
+        location === '-' ||
+        location === 'TBD' ||
+        location.toLowerCase() === 'tbd') {
+      return false;
     }
-    acc[key].events.push(event);
-    return acc;
-  }, {});
+    
+    // Check if coordinates are valid (not just default campus center)
+    // Default campus center is 28.0650, -82.4170
+    if (event.coordinates && 
+        event.coordinates.lat === 28.0650 && 
+        event.coordinates.lng === -82.4170 &&
+        event.coordinates.name === 'USF Tampa Campus') {
+      // Only exclude if it's the default AND location is generic
+      if (location === 'USF Tampa Campus' || !location) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
 
-  // Get unique dates for filter
-  const uniqueDates = ['all', ...new Set(events.map(e => {
+  // Filter events to only those with valid locations (for map display)
+  const eventsWithLocations = events.filter(hasValidLocation);
+
+  // Get unique dates for filter (only from events with locations)
+  const uniqueDates = ['all', ...new Set(eventsWithLocations.map(e => {
     const parsed = parseDateTime(e.datetime);
     return parsed.split(',')[0] || 'No date';
   }))];
 
-  // Filter events by selected date
+  // Filter events by selected date (from events with locations)
   const filteredEvents = selectedDate === 'all'
-    ? events
-    : events.filter(e => parseDateTime(e.datetime).includes(selectedDate));
+    ? eventsWithLocations
+    : eventsWithLocations.filter(e => parseDateTime(e.datetime).includes(selectedDate));
 
   const filteredLocations = filteredEvents.reduce((acc, event) => {
     const key = `${event.coordinates.lat}-${event.coordinates.lng}`;
@@ -135,12 +157,15 @@ function MapView() {
             onChange={(e) => setSelectedDate(e.target.value)}
             className="date-filter"
           >
-            <option value="all">All Dates ({events.length} events)</option>
-            {uniqueDates.slice(1).map(date => (
-              <option key={date} value={date}>
-                {date} ({events.filter(e => parseDateTime(e.datetime).includes(date)).length})
-              </option>
-            ))}
+            <option value="all">All Dates ({eventsWithLocations.length} events with locations)</option>
+            {uniqueDates.slice(1).map(date => {
+              const count = eventsWithLocations.filter(e => parseDateTime(e.datetime).includes(date)).length;
+              return (
+                <option key={date} value={date}>
+                  {date} ({count})
+                </option>
+              );
+            })}
           </select>
         </div>
         <button onClick={() => fetchEvents(true)} className="refresh-button">
