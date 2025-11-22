@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "USF Events Map",
+    "slug": "usf-events-map",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#006747"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hackjam.usfeventsmap"
+    },
+    "android": {
+      "package": "com.hackjam.usfeventsmap",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        }
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow USF Events Map to use your location to show nearby events."
+        }
+      ]
+    ]
+  }
+}

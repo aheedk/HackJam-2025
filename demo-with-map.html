@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USF Events Map - HackJam 2025</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: #006747;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background-color: #f5f5f5;
+        }
+
+        .tab.active {
+            color: #006747;
+            border-bottom-color: #006747;
+            background-color: #f9f9f9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        #map {
+            height: 600px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #006747;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .event-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .event-detail {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-org {
+            font-size: 13px;
+            color: #006747;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .navigate-btn {
+            background-color: #006747;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .navigate-btn:hover {
+            background-color: #005236;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #006747;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .leaflet-popup-content {
+            margin: 10px;
+            min-width: 200px;
+        }
+
+        .popup-title {
+            font-weight: bold;
+            font-size: 16px;
+            color: #006747;
+            margin-bottom: 10px;
+        }
+
+        .popup-event {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .popup-event:last-child {
+            border-bottom: none;
+        }
+
+        .popup-event-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .popup-event-time {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 USF Events Map</h1>
+        <p>Discover campus events near you</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('map')">
+            🗺️ Map View
+        </div>
+        <div class="tab" onclick="switchTab('list')">
+            📋 List View
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Map Tab -->
+        <div id="map-tab" class="tab-content active">
+            <div class="stats" id="map-stats" style="display: none;">
+                <div class="stats-number" id="map-event-count">0</div>
+                <div class="stats-label">Events on Map</div>
+            </div>
+            <div id="loading-map" class="loading">
+                <div class="spinner"></div>
+                <p>Loading map...</p>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <!-- List Tab -->
+        <div id="list-tab" class="tab-content">
+            <div class="stats" id="list-stats" style="display: none;">
+                <div class="stats-number" id="list-event-count">0</div>
+                <div class="stats-label">Upcoming Events</div>
+            </div>
+            <div id="loading-list" class="loading">
+                <div class="spinner"></div>
+                <p>Loading events...</p>
+            </div>
+            <div id="events-container"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let map;
+        let markers = [];
+        let allEvents = [];
+
+        // Initialize map
+        function initMap() {
+            // USF Tampa campus center
+            map = L.map('map').setView([28.0654, -82.4184], 15);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            // Initialize map if switching to map tab and not initialized
+            if (tabName === 'map' && !map) {
+                initMap();
+                if (allEvents.length > 0) {
+                    showEventsOnMap(allEvents);
+                }
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            let dayLabel = '';
+            if (eventDate.getTime() === today.getTime()) {
+                dayLabel = 'Today';
+            } else if (eventDate.getTime() === today.getTime() + 86400000) {
+                dayLabel = 'Tomorrow';
+            } else {
+                dayLabel = date.toLocaleDateString('en-US', { weekday: 'long' });
+            }
+
+            const time = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+            });
+
+            const fullDate = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+            });
+
+            return `${dayLabel}, ${fullDate} at ${time}`;
+        }
+
+        function openNavigation(coords) {
+            if (!coords) {
+                alert('Location coordinates not available');
+                return;
+            }
+
+            if (coords.isVirtual) {
+                alert('This is a virtual event');
+                return;
+            }
+
+            const url = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
+            window.open(url, '_blank');
+        }
+
+        function showEventsOnMap(events) {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            // Group events by location
+            const locationGroups = {};
+            events.forEach(event => {
+                if (event.locationCoords && !event.locationCoords.isVirtual) {
+                    const key = `${event.locationCoords.latitude},${event.locationCoords.longitude}`;
+                    if (!locationGroups[key]) {
+                        locationGroups[key] = {
+                            coords: event.locationCoords,
+                            events: []
+                        };
+                    }
+                    locationGroups[key].events.push(event);
+                }
+            });
+
+            // Create markers for each location
+            Object.values(locationGroups).forEach(group => {
+                const icon = L.divIcon({
+                    className: 'custom-marker',
+                    html: `<div style="background-color: #006747; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">${group.events.length}</div>`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+
+                const marker = L.marker([group.coords.latitude, group.coords.longitude], { icon })
+                    .addTo(map);
+
+                // Create popup content
+                const popupContent = `
+                    <div class="popup-title">${group.coords.name}</div>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        ${group.events.slice(0, 5).map(event => `
+                            <div class="popup-event">
+                                <div class="popup-event-name">${event.name}</div>
+                                <div class="popup-event-time">${formatDate(event.startsOn)}</div>
+                            </div>
+                        `).join('')}
+                        ${group.events.length > 5 ? `<div style="text-align: center; color: #666; font-size: 12px; margin-top: 8px;">+${group.events.length - 5} more events</div>` : ''}
+                    </div>
+                    <button onclick='openNavigation(${JSON.stringify(group.coords)})' style="width: 100%; padding: 8px; background: #006747; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Navigate Here</button>
+                `;
+
+                marker.bindPopup(popupContent, { maxWidth: 300 });
+                markers.push(marker);
+            });
+
+            document.getElementById('map-stats').style.display = 'block';
+            document.getElementById('map-event-count').textContent = events.filter(e => e.locationCoords && !e.locationCoords.isVirtual).length;
+            document.getElementById('loading-map').style.display = 'none';
+        }
+
+        function renderEventsList(events) {
+            const container = document.getElementById('events-container');
+            const loading = document.getElementById('loading-list');
+            const stats = document.getElementById('list-stats');
+            const eventCount = document.getElementById('list-event-count');
+
+            loading.style.display = 'none';
+
+            if (!events || events.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 60px; color: #999;">No events found</div>';
+                return;
+            }
+
+            stats.style.display = 'block';
+            eventCount.textContent = events.length;
+
+            container.innerHTML = events.map(event => `
+                <div class="event-card">
+                    <div class="event-name">${event.name}</div>
+                    <div class="event-detail">
+                        <span>📅</span>
+                        <span>${formatDate(event.startsOn)}</span>
+                    </div>
+                    ${event.locationCoords ? `
+                        <div class="event-detail">
+                            <span>📍</span>
+                            <span>${event.locationCoords.name}${event.locationCoords.isVirtual ? ' (Virtual)' : ''}</span>
+                        </div>
+                    ` : ''}
+                    ${event.organizationName ? `
+                        <div class="event-org">
+                            👥 ${event.organizationName}
+                        </div>
+                    ` : ''}
+                    ${event.locationCoords && !event.locationCoords.isVirtual ? `
+                        <button class="navigate-btn" onclick='openNavigation(${JSON.stringify(event.locationCoords)})'>
+                            🧭 Navigate to Event
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        async function loadEvents() {
+            try {
+                const response = await fetch(`${API_URL}/events`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    allEvents = data.events.sort((a, b) => {
+                        return new Date(a.startsOn) - new Date(b.startsOn);
+                    });
+
+                    renderEventsList(allEvents);
+
+                    // If map tab is active, show events on map
+                    if (map) {
+                        showEventsOnMap(allEvents);
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to load events');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                document.getElementById('loading-list').innerHTML = `
+                    <div style="color: #c33;">Could not connect to server. Make sure the backend is running.</div>
+                `;
+            }
+        }
+
+        // Load events on page load
+        loadEvents();
+
+        // Reload every 5 minutes
+        setInterval(loadEvents, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

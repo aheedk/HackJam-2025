@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>USF Events Map - HackJam 2025</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: #006747;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #006747;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .event-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .event-detail {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-detail-icon {
+            font-size: 16px;
+        }
+
+        .event-org {
+            font-size: 13px;
+            color: #006747;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .navigate-btn {
+            background-color: #006747;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .navigate-btn:hover {
+            background-color: #005236;
+        }
+
+        .navigate-btn:active {
+            transform: scale(0.98);
+        }
+
+        .error {
+            background-color: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .refresh-btn {
+            background-color: white;
+            color: #006747;
+            border: 2px solid #006747;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+        }
+
+        .stats {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stats-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #006747;
+        }
+
+        .stats-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎓 USF Events</h1>
+        <p>Discover campus events near you</p>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stats-number" id="event-count">0</div>
+            <div class="stats-label">Upcoming Events</div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading events...</p>
+        </div>
+
+        <div id="error" style="display: none;"></div>
+        <div id="events-container"></div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const eventDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+            let dayLabel = '';
+            if (eventDate.getTime() === today.getTime()) {
+                dayLabel = 'Today';
+            } else if (eventDate.getTime() === today.getTime() + 86400000) {
+                dayLabel = 'Tomorrow';
+            } else {
+                dayLabel = date.toLocaleDateString('en-US', { weekday: 'long' });
+            }
+
+            const time = date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+            });
+
+            const fullDate = date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+            });
+
+            return `${dayLabel}, ${fullDate} at ${time}`;
+        }
+
+        function openNavigation(coords) {
+            if (!coords) {
+                alert('Location coordinates not available');
+                return;
+            }
+
+            if (coords.isVirtual) {
+                alert('This is a virtual event');
+                return;
+            }
+
+            const url = `https://maps.google.com/?q=${coords.latitude},${coords.longitude}`;
+            window.open(url, '_blank');
+        }
+
+        function renderEvents(events) {
+            const container = document.getElementById('events-container');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const stats = document.getElementById('stats');
+            const eventCount = document.getElementById('event-count');
+
+            loading.style.display = 'none';
+            error.style.display = 'none';
+
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <p style="font-size: 18px; margin-bottom: 10px;">No events found</p>
+                        <p>Check back later for upcoming events</p>
+                        <button class="refresh-btn" onclick="loadEvents()">Refresh</button>
+                    </div>
+                `;
+                return;
+            }
+
+            stats.style.display = 'block';
+            eventCount.textContent = events.length;
+
+            container.innerHTML = events.map(event => `
+                <div class="event-card">
+                    <div class="event-name">${event.name}</div>
+
+                    <div class="event-detail">
+                        <span class="event-detail-icon">📅</span>
+                        <span>${formatDate(event.startsOn)}</span>
+                    </div>
+
+                    ${event.locationCoords ? `
+                        <div class="event-detail">
+                            <span class="event-detail-icon">📍</span>
+                            <span>${event.locationCoords.name}${event.locationCoords.isVirtual ? ' (Virtual)' : ''}</span>
+                        </div>
+                    ` : ''}
+
+                    ${event.organizationName ? `
+                        <div class="event-org">
+                            👥 ${event.organizationName}
+                        </div>
+                    ` : ''}
+
+                    ${event.locationCoords && !event.locationCoords.isVirtual ? `
+                        <button class="navigate-btn" onclick='openNavigation(${JSON.stringify(event.locationCoords)})'>
+                            🧭 Navigate to Event
+                        </button>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function showError(message) {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const container = document.getElementById('events-container');
+
+            loading.style.display = 'none';
+            error.style.display = 'block';
+            error.className = 'error';
+            error.innerHTML = `
+                <strong>Error loading events</strong><br>
+                ${message}<br>
+                <button class="refresh-btn" onclick="loadEvents()" style="margin-top: 10px;">Try Again</button>
+            `;
+            container.innerHTML = '';
+        }
+
+        async function loadEvents() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_URL}/events`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Sort by date
+                    const sortedEvents = data.events.sort((a, b) => {
+                        return new Date(a.startsOn) - new Date(b.startsOn);
+                    });
+                    renderEvents(sortedEvents);
+                } else {
+                    showError(data.error || 'Failed to load events');
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                showError('Could not connect to server. Make sure the backend is running on http://localhost:3000');
+            }
+        }
+
+        // Load events on page load
+        loadEvents();
+
+        // Reload every 5 minutes
+        setInterval(loadEvents, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

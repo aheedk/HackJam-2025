@@ -1,0 +1,82 @@
+{
+  "locations": [
+    {
+      "name": "Marshall Student Center",
+      "aliases": ["MSC", "Marshall Center", "Marshall Student Ctr"],
+      "latitude": 28.0654,
+      "longitude": -82.4184,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Library",
+      "aliases": ["USF Library", "Tampa Library", "USF Tampa Library"],
+      "latitude": 28.0639,
+      "longitude": -82.4147,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Recreation Center",
+      "aliases": ["Rec Center", "Campus Rec", "USF Recreation"],
+      "latitude": 28.0647,
+      "longitude": -82.4197,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Juniper Poplar Hall",
+      "aliases": ["JPH", "Juniper-Poplar"],
+      "latitude": 28.0633,
+      "longitude": -82.4166,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Cooper Hall",
+      "aliases": ["CPR"],
+      "latitude": 28.0625,
+      "longitude": -82.4152,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Engineering Building",
+      "aliases": ["ENG", "Engineering"],
+      "latitude": 28.0597,
+      "longitude": -82.4138,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Business Building",
+      "aliases": ["BSN", "Muma College of Business"],
+      "latitude": 28.0604,
+      "longitude": -82.4188,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Sun Dome",
+      "aliases": ["Yuengling Center"],
+      "latitude": 28.0631,
+      "longitude": -82.4218,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Student Services",
+      "aliases": ["SVC"],
+      "latitude": 28.0641,
+      "longitude": -82.4171,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "The Oval",
+      "aliases": ["MLK Plaza", "MLK Oval"],
+      "latitude": 28.0645,
+      "longitude": -82.4159,
+      "address": "4202 E Fowler Ave, Tampa, FL 33620"
+    },
+    {
+      "name": "Virtual Event",
+      "aliases": ["Online", "Zoom", "Virtual", "Online Event", "Video Conference"],
+      "latitude": 28.0654,
+      "longitude": -82.4184,
+      "address": "Virtual/Online",
+      "isVirtual": true
+    }
+  ]
+}
