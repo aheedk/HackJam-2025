@@ -105,10 +105,39 @@ function MapView() {
   const eventsWithLocations = events.filter(hasValidLocation);
 
   // Get unique dates for filter (only from events with locations)
-  const uniqueDates = ['all', ...new Set(eventsWithLocations.map(e => {
+  const dateSet = new Set(eventsWithLocations.map(e => {
     const parsed = parseDateTime(e.datetime);
-    return parsed.split(',')[0] || 'No date';
-  }))];
+    return parsed.split(',')[0]?.trim() || 'No date';
+  }));
+
+  // Convert to array and sort chronologically
+  const sortedDates = Array.from(dateSet).sort((a, b) => {
+    if (a === 'No date') return 1;
+    if (b === 'No date') return 1;
+
+    // Parse dates to compare them chronologically
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayA = daysOfWeek.indexOf(a.substring(0, 3));
+    const dayB = daysOfWeek.indexOf(b.substring(0, 3));
+
+    if (dayA !== -1 && dayB !== -1) {
+      return dayA - dayB;
+    }
+    return a.localeCompare(b);
+  });
+
+  // Get today's day of week
+  const today = new Date();
+  const todayDayName = today.toLocaleDateString('en-US', { weekday: 'short' });
+
+  // Find and move today to the front
+  const todayIndex = sortedDates.findIndex(date => date.startsWith(todayDayName));
+  if (todayIndex > 0) {
+    const todayDate = sortedDates.splice(todayIndex, 1)[0];
+    sortedDates.unshift(todayDate);
+  }
+
+  const uniqueDates = ['all', ...sortedDates];
 
   // Filter events by selected date (from events with locations)
   const filteredEvents = selectedDate === 'all'
@@ -160,9 +189,13 @@ function MapView() {
             <option value="all">All Dates ({eventsWithLocations.length} events with locations)</option>
             {uniqueDates.slice(1).map(date => {
               const count = eventsWithLocations.filter(e => parseDateTime(e.datetime).includes(date)).length;
+              const today = new Date();
+              const todayDayName = today.toLocaleDateString('en-US', { weekday: 'short' });
+              const isToday = date.startsWith(todayDayName);
+
               return (
                 <option key={date} value={date}>
-                  {date} ({count})
+                  {date} {isToday ? '(Today)' : ''} ({count})
                 </option>
               );
             })}

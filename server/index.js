@@ -44,6 +44,12 @@ const USF_LOCATIONS = {
   'theater': { lat: 28.06342185774089, lng: -82.4144719350504, name: 'USF Theatre' },
   'usf theatre 2': { lat: 28.06342185774089, lng: -82.4144719350504, name: 'USF Theatre 2' },
 
+  // Muma College of Business (MANUALLY PROVIDED - VERIFIED)
+  'muma': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
+  'muma college': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
+  'college of business': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
+  'business': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
+
   // Default Campus Location (fallback for unmatched locations)
   'tampa campus': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
   'usf tampa': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
