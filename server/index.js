@@ -122,6 +122,12 @@ async function fetchEventsFromAPI() {
       const locationStr = event.p6 || '';
       const coords = geocodeLocation(locationStr);
 
+      // Fix image URLs to include full domain
+      let imageUrl = event.p11;
+      if (imageUrl && imageUrl.startsWith('/')) {
+        imageUrl = `https://bullsconnect.usf.edu${imageUrl}`;
+      }
+
       return {
         id: event.p1,
         uid: event.p2,
@@ -133,7 +139,7 @@ async function fetchEventsFromAPI() {
         organizationId: event.p7,
         organizationName: event.p9,
         attendeeCount: event.p10,
-        imageUrl: event.p11,
+        imageUrl: imageUrl,
         price: event.p12,
         buttonLabel: event.p13,
         tags: event.p22,
