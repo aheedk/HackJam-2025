@@ -1,0 +1,199 @@
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import axios from 'axios';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import './MapView.css';
+
+// Fix for default marker icons in react-leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Utility function to parse HTML datetime string and extract clean text
+function parseDateTime(htmlString) {
+  if (!htmlString) return '';
+
+  // Create a temporary div to parse HTML
+  const temp = document.createElement('div');
+  temp.innerHTML = htmlString;
+
+  // Extract text content and clean it up
+  const text = temp.textContent || temp.innerText || '';
+  return text.trim();
+}
+
+function MapView() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedDate, setSelectedDate] = useState('all');
+
+  // USF Tampa Campus center coordinates
+  const usfCenter = [28.0650, -82.4170];
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('http://localhost:3001/api/events');
+      setEvents(response.data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load events. Make sure the backend server is running.');
+      console.error('Error fetching events:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Group events by location
+  const eventsByLocation = events.reduce((acc, event) => {
+    const key = `${event.coordinates.lat}-${event.coordinates.lng}`;
+    if (!acc[key]) {
+      acc[key] = {
+        coordinates: event.coordinates,
+        events: []
+      };
+    }
+    acc[key].events.push(event);
+    return acc;
+  }, {});
+
+  // Get unique dates for filter
+  const uniqueDates = ['all', ...new Set(events.map(e => {
+    const parsed = parseDateTime(e.datetime);
+    return parsed.split(',')[0] || 'No date';
+  }))];
+
+  // Filter events by selected date
+  const filteredEvents = selectedDate === 'all'
+    ? events
+    : events.filter(e => parseDateTime(e.datetime).includes(selectedDate));
+
+  const filteredLocations = filteredEvents.reduce((acc, event) => {
+    const key = `${event.coordinates.lat}-${event.coordinates.lng}`;
+    if (!acc[key]) {
+      acc[key] = {
+        coordinates: event.coordinates,
+        events: []
+      };
+    }
+    acc[key].events.push(event);
+    return acc;
+  }, {});
+
+  if (loading) {
+    return (
+      <div className="map-container">
+        <div className="loading">Loading events...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="map-container">
+        <div className="error">
+          <p>{error}</p>
+          <button onClick={fetchEvents} className="retry-button">Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="map-container">
+      <div className="map-controls">
+        <div className="control-group">
+          <label htmlFor="date-filter">Filter by date:</label>
+          <select
+            id="date-filter"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="date-filter"
+          >
+            <option value="all">All Dates ({events.length} events)</option>
+            {uniqueDates.slice(1).map(date => (
+              <option key={date} value={date}>
+                {date} ({events.filter(e => parseDateTime(e.datetime).includes(date)).length})
+              </option>
+            ))}
+          </select>
+        </div>
+        <button onClick={fetchEvents} className="refresh-button">
+          Refresh
+        </button>
+      </div>
+
+      <MapContainer
+        center={usfCenter}
+        zoom={15}
+        style={{ height: '100%', width: '100%' }}
+        className="leaflet-map"
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {Object.values(filteredLocations).map((location, idx) => (
+          <Marker
+            key={idx}
+            position={[location.coordinates.lat, location.coordinates.lng]}
+          >
+            <Popup maxWidth={300}>
+              <div className="popup-content">
+                <h3 className="popup-location">{location.coordinates.name}</h3>
+                <div className="popup-count">
+                  {location.events.length} event{location.events.length !== 1 ? 's' : ''}
+                </div>
+                <div className="popup-events">
+                  {location.events.map((event, eventIdx) => (
+                    <div key={event.id} className="popup-event">
+                      {event.imageUrl && (
+                        <img
+                          src={event.imageUrl}
+                          alt={event.name}
+                          className="popup-event-image"
+                        />
+                      )}
+                      <h4>{event.name}</h4>
+                      <p className="event-org"><strong>Organization:</strong> {event.organizationName}</p>
+                      {event.datetime && (
+                        <p className="event-time"><strong>Date & Time:</strong> {parseDateTime(event.datetime)}</p>
+                      )}
+                      {event.location && (
+                        <p className="event-location"><strong>Location:</strong> {event.location}</p>
+                      )}
+                      {event.category && (
+                        <span className="event-category">{event.category}</span>
+                      )}
+                      {event.capacityStatus && (
+                        <span className="event-capacity">{parseDateTime(event.capacityStatus)}</span>
+                      )}
+                      {eventIdx < location.events.length - 1 && <hr />}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}
+
+export default MapView;
