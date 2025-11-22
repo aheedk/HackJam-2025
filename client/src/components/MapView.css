@@ -87,7 +87,7 @@
   align-items: center;
   padding: 0.4rem 0.85rem;
   background-color: #006747;
-  color: white;
+  color: white !important;
   text-decoration: none;
   border-radius: 6px;
   font-size: 0.85rem;
@@ -95,6 +95,13 @@
   white-space: nowrap;
   transition: background-color 0.2s ease, transform 0.1s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navigate-button:link,
+.navigate-button:visited,
+.navigate-button:hover,
+.navigate-button:active {
+  color: white !important;
 }
 
 .navigate-button:hover {
