@@ -50,6 +50,33 @@ const USF_LOCATIONS = {
   'college of business': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
   'business': { lat: 28.05885854322808, lng: -82.40902944972976, name: 'Muma College of Business' },
 
+  // Contemporary Art Museum (MANUALLY PROVIDED - VERIFIED)
+  'contemporary art museum': { lat: 28.06387586733336, lng: -82.41567783446646, name: 'USF Contemporary Art Museum' },
+  'art museum': { lat: 28.06387586733336, lng: -82.41567783446646, name: 'USF Contemporary Art Museum' },
+  'cam': { lat: 28.06387586733336, lng: -82.41567783446646, name: 'USF Contemporary Art Museum' },
+  'museum': { lat: 28.06387586733336, lng: -82.41567783446646, name: 'USF Contemporary Art Museum' },
+
+  // MDA - Music and Dance Academy (MANUALLY PROVIDED - VERIFIED)
+  'mda': { lat: 28.06519895411191, lng: -82.42501320364686, name: 'Music and Dance Academy (MDA)' },
+  'music and dance': { lat: 28.06519895411191, lng: -82.42501320364686, name: 'Music and Dance Academy' },
+  'music': { lat: 28.06519895411191, lng: -82.42501320364686, name: 'Music and Dance Academy' },
+  'dance': { lat: 28.06519895411191, lng: -82.42501320364686, name: 'Music and Dance Academy' },
+
+  // Social Sciences Building (MANUALLY PROVIDED - VERIFIED)
+  'soc': { lat: 28.062000697808816, lng: -82.40882480589694, name: 'Social Sciences Building (SOC)' },
+  'social sciences': { lat: 28.062000697808816, lng: -82.40882480589694, name: 'Social Sciences Building' },
+  'social sciences building': { lat: 28.062000697808816, lng: -82.40882480589694, name: 'Social Sciences Building' },
+
+  // BSN - Behavioral Sciences Building (MANUALLY PROVIDED - VERIFIED)
+  'bsn': { lat: 28.058787896895808, lng: -82.4099010614537, name: 'Behavioral Sciences Building (BSN)' },
+  'behavioral sciences': { lat: 28.058787896895808, lng: -82.4099010614537, name: 'Behavioral Sciences Building' },
+  'behavioral sciences building': { lat: 28.058787896895808, lng: -82.4099010614537, name: 'Behavioral Sciences Building' },
+
+  // USF Research Park Fields (MANUALLY PROVIDED - VERIFIED)
+  'research park fields': { lat: 28.056223417938178, lng: -82.42153447494738, name: 'USF Research Park Fields' },
+  'research park': { lat: 28.056223417938178, lng: -82.42153447494738, name: 'USF Research Park Fields' },
+  'research fields': { lat: 28.056223417938178, lng: -82.42153447494738, name: 'USF Research Park Fields' },
+
   // Default Campus Location (fallback for unmatched locations)
   'tampa campus': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
   'usf tampa': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
