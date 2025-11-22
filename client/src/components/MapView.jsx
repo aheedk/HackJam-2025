@@ -5,18 +5,18 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './MapView.css';
 
-// Fix for default marker icons in react-leaflet
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
+// Create custom numbered marker icon
+function createNumberedIcon(count) {
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `<div class="marker-pin">
+             <span class="marker-number">${count}</span>
+           </div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20]
+  });
+}
 
 // Utility function to parse HTML datetime string and extract clean text
 function parseDateTime(htmlString) {
@@ -152,10 +152,21 @@ function MapView() {
           <Marker
             key={idx}
             position={[location.coordinates.lat, location.coordinates.lng]}
+            icon={createNumberedIcon(location.events.length)}
           >
             <Popup maxWidth={300}>
               <div className="popup-content">
-                <h3 className="popup-location">{location.coordinates.name}</h3>
+                <div className="popup-header">
+                  <h3 className="popup-location">{location.coordinates.name}</h3>
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${location.coordinates.lat},${location.coordinates.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="navigate-button"
+                  >
+                    Navigate
+                  </a>
+                </div>
                 <div className="popup-count">
                   {location.events.length} event{location.events.length !== 1 ? 's' : ''}
                 </div>

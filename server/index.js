@@ -16,9 +16,9 @@ app.use(express.json());
 // Known USF campus locations with coordinates
 const USF_LOCATIONS = {
   // Student Centers & Main Buildings
-  'marshall student center': { lat: 28.0650, lng: -82.4194, name: 'Marshall Student Center' },
-  'msc': { lat: 28.0650, lng: -82.4194, name: 'Marshall Student Center' },
-  'student center': { lat: 28.0650, lng: -82.4194, name: 'Marshall Student Center' },
+  'marshall student center': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
+  'msc': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
+  'student center': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
 
   // Academic Buildings
   'cooper hall': { lat: 28.0640, lng: -82.4180, name: 'Cooper Hall' },
@@ -26,8 +26,9 @@ const USF_LOCATIONS = {
   'criser hall': { lat: 28.0645, lng: -82.4165, name: 'Criser Hall' },
   'engineering': { lat: 28.0660, lng: -82.4130, name: 'Engineering Building' },
   'ene': { lat: 28.0660, lng: -82.4130, name: 'Engineering Building' },
-  'business': { lat: 28.0635, lng: -82.4195, name: 'Business Building' },
-  'bsn': { lat: 28.0635, lng: -82.4195, name: 'Business Building' },
+  'business': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
+  'bsn': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
+  'muma': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
   'physics': { lat: 28.0655, lng: -82.4145, name: 'Physics Building' },
   'phy': { lat: 28.0655, lng: -82.4145, name: 'Physics Building' },
   'chemistry': { lat: 28.0662, lng: -82.4152, name: 'Chemistry Building' },
