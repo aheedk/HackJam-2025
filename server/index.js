@@ -15,58 +15,36 @@ app.use(express.json());
 
 // Known USF campus locations with coordinates
 const USF_LOCATIONS = {
-  // Student Centers & Main Buildings
+  // Student Centers & Main Buildings (VERIFIED COORDINATES)
   'marshall student center': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
   'msc': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
   'student center': { lat: 28.063934, lng: -82.4134536, name: 'Marshall Student Center' },
+  'argos': { lat: 28.063934, lng: -82.4134536, name: 'Argos Exchange (MSC)' },
+  'argos exchange': { lat: 28.063934, lng: -82.4134536, name: 'Argos Exchange' },
+  'the loft': { lat: 28.063934, lng: -82.4134536, name: 'The Loft (MSC)' },
+  'esports living lab': { lat: 28.063934, lng: -82.4134536, name: 'Esports Living Lab (MSC)' },
 
-  // Academic Buildings
-  'cooper hall': { lat: 28.0640, lng: -82.4180, name: 'Cooper Hall' },
-  'library': { lat: 28.0670, lng: -82.4150, name: 'USF Library' },
-  'criser hall': { lat: 28.0645, lng: -82.4165, name: 'Criser Hall' },
-  'engineering': { lat: 28.0660, lng: -82.4130, name: 'Engineering Building' },
-  'ene': { lat: 28.0660, lng: -82.4130, name: 'Engineering Building' },
-  'business': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
-  'bsn': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
-  'muma': { lat: 28.058329, lng: -82.409798, name: 'Muma College of Business' },
-  'physics': { lat: 28.0655, lng: -82.4145, name: 'Physics Building' },
-  'phy': { lat: 28.0655, lng: -82.4145, name: 'Physics Building' },
-  'chemistry': { lat: 28.0662, lng: -82.4152, name: 'Chemistry Building' },
-  'chm': { lat: 28.0662, lng: -82.4152, name: 'Chemistry Building' },
-  'science center': { lat: 28.0668, lng: -82.4155, name: 'Science Center' },
-  'isv': { lat: 28.0668, lng: -82.4155, name: 'Interdisciplinary Science Building' },
-  'arts': { lat: 28.0642, lng: -82.4202, name: 'Contemporary Art Museum' },
-  'cam': { lat: 28.0642, lng: -82.4202, name: 'Contemporary Art Museum' },
+  // Engineering Buildings (MANUALLY PROVIDED - VERIFIED)
+  'engineering': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'Engineering Building' },
+  'enb': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'Engineering Building (ENB)' },
+  'eng': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'Engineering Building (ENG)' },
+  'ene': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'Engineering (ENE)' },
+  'dfx lab': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'DFX Lab (Engineering)' },
+  'ieee workshop': { lat: 28.058641622058513, lng: -82.41561841503614, name: 'IEEE Workshop (Engineering)' },
 
-  // Recreation & Sports
-  'recreation center': { lat: 28.0632, lng: -82.4140, name: 'Campus Recreation Center' },
-  'rec center': { lat: 28.0632, lng: -82.4140, name: 'Campus Recreation Center' },
-  'yuengling center': { lat: 28.0620, lng: -82.4098, name: 'Yuengling Center' },
-  'sun dome': { lat: 28.0620, lng: -82.4098, name: 'Yuengling Center (Sun Dome)' },
+  // Recreation & Sports (MANUALLY PROVIDED - VERIFIED)
+  'recreation center': { lat: 28.060379000487956, lng: -82.4076140119299, name: 'Campus Recreation Center' },
+  'rec center': { lat: 28.060379000487956, lng: -82.4076140119299, name: 'Campus Recreation Center' },
+  'rec': { lat: 28.060379000487956, lng: -82.4076140119299, name: 'Recreation Center' },
+  'fitness center': { lat: 28.060379000487956, lng: -82.4076140119299, name: 'Fitness Center' },
+  'rec courts': { lat: 28.060379000487956, lng: -82.4076140119299, name: 'Recreation Center Courts' },
 
-  // Residence Halls
-  'juniper': { lat: 28.0605, lng: -82.4193, name: 'Juniper-Poplar Hall' },
-  'poplar': { lat: 28.0605, lng: -82.4193, name: 'Juniper-Poplar Hall' },
-  'jpop': { lat: 28.0605, lng: -82.4193, name: 'Juniper-Poplar Hall' },
-  'the village': { lat: 28.0575, lng: -82.4165, name: 'The Village' },
-  'beta hall': { lat: 28.0595, lng: -82.4150, name: 'Beta Hall' },
-  'alpha hall': { lat: 28.0598, lng: -82.4155, name: 'Alpha Hall' },
-  'delta hall': { lat: 28.0592, lng: -82.4145, name: 'Delta Hall' },
-  'epsilon hall': { lat: 28.0590, lng: -82.4160, name: 'Epsilon Hall' },
-  'theta hall': { lat: 28.0588, lng: -82.4152, name: 'Theta Hall' },
-  'castor hall': { lat: 28.0612, lng: -82.4162, name: 'Castor Hall' },
-  'maple hall': { lat: 28.0608, lng: -82.4188, name: 'Maple Hall' },
-  'magnolia hall': { lat: 28.0602, lng: -82.4185, name: 'Magnolia Hall' },
+  // Theatre (MANUALLY PROVIDED - VERIFIED)
+  'theatre': { lat: 28.06342185774089, lng: -82.4144719350504, name: 'USF Theatre' },
+  'theater': { lat: 28.06342185774089, lng: -82.4144719350504, name: 'USF Theatre' },
+  'usf theatre 2': { lat: 28.06342185774089, lng: -82.4144719350504, name: 'USF Theatre 2' },
 
-  // Dining
-  'dining': { lat: 28.0648, lng: -82.4172, name: 'Dining' },
-  'argos': { lat: 28.0648, lng: -82.4172, name: 'Argos Exchange' },
-  'fresh food': { lat: 28.0608, lng: -82.4168, name: 'Fresh Food Company' },
-
-  // Other Campus Locations
-  'wellness center': { lat: 28.0638, lng: -82.4188, name: 'Student Health & Wellness Center' },
-  'parking': { lat: 28.0655, lng: -82.4120, name: 'Campus Parking' },
-  'bookstore': { lat: 28.0652, lng: -82.4192, name: 'USF Bookstore' },
+  // Default Campus Location (fallback for unmatched locations)
   'tampa campus': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
   'usf tampa': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' },
   'usf': { lat: 28.0650, lng: -82.4170, name: 'USF Tampa Campus' }
