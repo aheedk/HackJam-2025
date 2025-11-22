@@ -119,36 +119,54 @@ async function fetchEventsFromAPI() {
     }
 
     // Transform the data to a more usable format
-    const events = response.data.map(event => {
-      const locationStr = event.p6 || '';
-      const coords = geocodeLocation(locationStr);
+    const events = response.data
+      .map(event => {
+        const locationStr = event.p6 || '';
+        const coords = geocodeLocation(locationStr);
 
-      // Fix image URLs to include full domain
-      let imageUrl = event.p11;
-      if (imageUrl && imageUrl.startsWith('/')) {
-        imageUrl = `https://bullsconnect.usf.edu${imageUrl}`;
-      }
+        // Fix image URLs to include full domain
+        let imageUrl = event.p11;
+        if (imageUrl && imageUrl.startsWith('/')) {
+          imageUrl = `https://bullsconnect.usf.edu${imageUrl}`;
+        }
 
-      return {
-        id: event.p1,
-        uid: event.p2,
-        name: event.p3,
-        datetime: event.p4,
-        category: event.p5,
-        location: locationStr,
-        coordinates: coords,
-        organizationId: event.p7,
-        organizationName: event.p9,
-        attendeeCount: event.p10,
-        imageUrl: imageUrl,
-        price: event.p12,
-        buttonLabel: event.p13,
-        tags: event.p22,
-        customTime: event.p24,
-        capacityStatus: event.p26,
-        timezone: event.p28
-      };
-    });
+        // Clean up values - convert false/null/string "false" to null
+        let name = event.p3;
+        if (!name || name === false || name === 'false' || String(name).toLowerCase().trim() === 'false' || String(name).trim() === '') {
+          name = null;
+        }
+        
+        let organizationName = event.p9;
+        if (!organizationName || organizationName === false || organizationName === 'false' || String(organizationName).toLowerCase().trim() === 'false') {
+          organizationName = null;
+        }
+
+        return {
+          id: event.p1,
+          uid: event.p2,
+          name: name,
+          datetime: event.p4,
+          category: event.p5,
+          location: locationStr,
+          coordinates: coords,
+          organizationId: event.p7,
+          organizationName: organizationName,
+          attendeeCount: event.p10 || 0,
+          imageUrl: imageUrl,
+          price: event.p12,
+          buttonLabel: event.p13,
+          tags: event.p22,
+          customTime: event.p24,
+          capacityStatus: event.p26,
+          timezone: event.p28
+        };
+      })
+      // Filter out events with invalid names (required field)
+      .filter(event => {
+        if (!event.name) return false;
+        const nameStr = String(event.name).trim().toLowerCase();
+        return nameStr !== '' && nameStr !== 'false' && nameStr !== 'null' && nameStr !== 'undefined';
+      });
 
     return events;
   } catch (error) {
@@ -160,11 +178,25 @@ async function fetchEventsFromAPI() {
 // API endpoint to get all events
 app.get('/api/events', async (req, res) => {
   try {
+    // Check if cache should be cleared (query parameter)
+    const forceRefresh = req.query.refresh === 'true';
+    
+    if (forceRefresh) {
+      cache.del('events');
+      console.log('Cache cleared, fetching fresh events...');
+    }
+    
     // Check cache first
     const cachedEvents = cache.get('events');
-    if (cachedEvents) {
+    if (cachedEvents && !forceRefresh) {
       console.log('Returning cached events');
-      return res.json(cachedEvents);
+      // Double-check cached events are valid (filter again as safety)
+      const validCachedEvents = cachedEvents.filter(event => {
+        if (!event.name) return false;
+        const nameStr = String(event.name).trim().toLowerCase();
+        return nameStr !== '' && nameStr !== 'false' && nameStr !== 'null' && nameStr !== 'undefined';
+      });
+      return res.json(validCachedEvents);
     }
 
     // Fetch fresh data
@@ -186,6 +218,12 @@ app.get('/api/events', async (req, res) => {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Clear cache endpoint
+app.post('/api/clear-cache', (req, res) => {
+  cache.del('events');
+  res.json({ status: 'ok', message: 'Cache cleared' });
 });
 
 app.listen(PORT, () => {

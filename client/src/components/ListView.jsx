@@ -26,11 +26,22 @@ function ListView() {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3001/api/events');
-      setEvents(response.data);
+      const url = forceRefresh 
+        ? 'http://localhost:3001/api/events?refresh=true'
+        : 'http://localhost:3001/api/events';
+      const response = await axios.get(url);
+      
+      // Double-filter on client side to ensure no invalid events
+      const validEvents = response.data.filter(event => {
+        if (!event.name) return false;
+        const nameStr = String(event.name).trim().toLowerCase();
+        return nameStr !== '' && nameStr !== 'false' && nameStr !== 'null' && nameStr !== 'undefined';
+      });
+      
+      setEvents(validEvents);
       setError(null);
     } catch (err) {
       setError('Failed to load events. Make sure the backend server is running.');
@@ -43,8 +54,15 @@ function ListView() {
   // Get unique categories
   const categories = ['all', ...new Set(events.map(e => e.category).filter(Boolean))];
 
-  // Filter events
+  // Filter events - also filter out invalid events
   const filteredEvents = events.filter(event => {
+    // Skip events with invalid names (double-check)
+    if (!event.name) return false;
+    const nameStr = String(event.name).trim().toLowerCase();
+    if (nameStr === '' || nameStr === 'false' || nameStr === 'null' || nameStr === 'undefined') {
+      return false;
+    }
+    
     const matchesSearch = event.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.organizationName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           event.location?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -96,7 +114,7 @@ function ListView() {
               </option>
             ))}
           </select>
-          <button onClick={fetchEvents} className="refresh-button">
+          <button onClick={() => fetchEvents(true)} className="refresh-button">
             Refresh
           </button>
         </div>
@@ -118,24 +136,29 @@ function ListView() {
                 <div className="event-image-container">
                   <img
                     src={event.imageUrl}
-                    alt={event.name}
+                    alt={event.name || 'Event'}
                     className="event-image"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
                   />
                 </div>
               )}
               <div className="event-content">
                 <div className="event-header">
-                  <h3 className="event-title">{event.name}</h3>
+                  <h3 className="event-title">{event.name || 'Untitled Event'}</h3>
                   {event.category && (
                     <span className="event-category-badge">{event.category}</span>
                   )}
                 </div>
 
                 <div className="event-details">
-                  <div className="event-detail-row">
-                    <span className="detail-label">Organization:</span>
-                    <span className="detail-text">{event.organizationName}</span>
-                  </div>
+                  {event.organizationName && (
+                    <div className="event-detail-row">
+                      <span className="detail-label">Organization:</span>
+                      <span className="detail-text">{event.organizationName}</span>
+                    </div>
+                  )}
 
                   {event.datetime && (
                     <div className="event-detail-row">

@@ -44,11 +44,22 @@ function MapView() {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:3001/api/events');
-      setEvents(response.data);
+      const url = forceRefresh 
+        ? 'http://localhost:3001/api/events?refresh=true'
+        : 'http://localhost:3001/api/events';
+      const response = await axios.get(url);
+      
+      // Filter out invalid events with robust checking
+      const validEvents = response.data.filter(event => {
+        if (!event.name) return false;
+        const nameStr = String(event.name).trim().toLowerCase();
+        return nameStr !== '' && nameStr !== 'false' && nameStr !== 'null' && nameStr !== 'undefined';
+      });
+      
+      setEvents(validEvents);
       setError(null);
     } catch (err) {
       setError('Failed to load events. Make sure the backend server is running.');
@@ -132,7 +143,7 @@ function MapView() {
             ))}
           </select>
         </div>
-        <button onClick={fetchEvents} className="refresh-button">
+        <button onClick={() => fetchEvents(true)} className="refresh-button">
           Refresh
         </button>
       </div>
@@ -180,8 +191,10 @@ function MapView() {
                           className="popup-event-image"
                         />
                       )}
-                      <h4>{event.name}</h4>
-                      <p className="event-org"><strong>Organization:</strong> {event.organizationName}</p>
+                      <h4>{event.name || 'Untitled Event'}</h4>
+                      {event.organizationName && (
+                        <p className="event-org"><strong>Organization:</strong> {event.organizationName}</p>
+                      )}
                       {event.datetime && (
                         <p className="event-time"><strong>Date & Time:</strong> {parseDateTime(event.datetime)}</p>
                       )}
