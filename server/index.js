@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const NodeCache = require('node-cache');
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -94,6 +94,24 @@ function geocodeLocation(locationString) {
 // Fetch events from Bulls Connect API
 async function fetchEventsFromAPI() {
   try {
+    // Build headers with authentication if available
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'application/json, text/plain, */*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://bullsconnect.usf.edu/',
+      'Origin': 'https://bullsconnect.usf.edu'
+    };
+
+    // Add cookies if provided in environment variables
+    if (process.env.BULLSCONNECT_COOKIE) {
+      headers['Cookie'] = process.env.BULLSCONNECT_COOKIE;
+      console.log('✓ Using authentication cookie for Bulls Connect API - full location details should be available');
+    } else {
+      console.log('⚠ No authentication cookie found - some locations may show as "Private Location (sign in to display)"');
+      console.log('   To fix this, add BULLSCONNECT_COOKIE to your .env file (see README.md for instructions)');
+    }
+
     const response = await axios.get('https://bullsconnect.usf.edu/mobile_ws/v17/mobile_events_list', {
       params: {
         range: 0,
@@ -109,9 +127,7 @@ async function fetchEventsFromAPI() {
         orderby_1: 'undefined',
         search_word: ''
       },
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+      headers: headers
     });
 
     if (!response.data || !Array.isArray(response.data)) {
@@ -121,7 +137,15 @@ async function fetchEventsFromAPI() {
     // Transform the data to a more usable format
     const events = response.data
       .map(event => {
-        const locationStr = event.p6 || '';
+        // Use location as-is from API - if authenticated, we'll get real locations
+        let locationStr = event.p6 || '';
+        
+        // Only use fallback if location is completely empty (not for private location messages)
+        // This way, if authenticated, we get the real location
+        if (!locationStr || locationStr.trim() === '') {
+          locationStr = 'USF Tampa Campus'; // Default fallback only for truly empty locations
+        }
+        
         const coords = geocodeLocation(locationStr);
 
         // Fix image URLs to include full domain
@@ -147,7 +171,7 @@ async function fetchEventsFromAPI() {
           name: name,
           datetime: event.p4,
           category: event.p5,
-          location: locationStr,
+          location: locationStr, // Use location as returned from API
           coordinates: coords,
           organizationId: event.p7,
           organizationName: organizationName,

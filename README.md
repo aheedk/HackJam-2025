@@ -26,6 +26,7 @@ An interactive web application that visualizes University of South Florida campu
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** - UI framework
 - **React Router** - Client-side routing
 - **Leaflet** - Interactive maps
@@ -34,6 +35,7 @@ An interactive web application that visualizes University of South Florida campu
 - **Vite** - Build tool and dev server
 
 ### Backend
+
 - **Node.js** - Runtime environment
 - **Express** - Web framework
 - **Axios** - HTTP client for API requests
@@ -66,10 +68,12 @@ HackJam-2025/
 ## Installation & Setup
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 
 ### Step 1: Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd HackJam-2025
@@ -78,6 +82,7 @@ cd HackJam-2025
 ### Step 2: Install Dependencies
 
 Install both backend and frontend dependencies:
+
 ```bash
 # Install backend dependencies
 npm install
@@ -89,25 +94,64 @@ cd ..
 ```
 
 Or use the convenience script:
+
 ```bash
 npm run install-all
 ```
 
 ### Step 3: Environment Variables (Optional)
 
-Copy the example environment file:
+Create a `.env` file in the root directory:
+
 ```bash
-cp .env.example .env
+touch .env
 ```
 
 The server will run on port 3001 by default. You can modify this in `.env`:
+
 ```env
 PORT=3001
 ```
 
+#### Getting Full Location Details (Required for Private Locations)
+
+To get full location details instead of "Private Location (sign in to display)", add your Bulls Connect session cookies:
+
+1. Log in to https://bullsconnect.usf.edu in your browser
+2. Open Developer Tools (F12 or Right-click > Inspect)
+3. Go to **Application** tab (Chrome) or **Storage** tab (Firefox)
+4. Navigate to **Cookies** > `bullsconnect.usf.edu`
+5. Copy **all** cookies - you'll need to format them as a cookie string:
+   - Look for cookies like `PHPSESSID`, `session`, `auth`, `csrf_token`, etc.
+   - Copy them in the format: `cookie1=value1; cookie2=value2; cookie3=value3`
+   - Or copy the entire cookie string from the browser's Network tab when making a request
+6. Add it to your `.env` file:
+
+```env
+BULLSCONNECT_COOKIE=PHPSESSID=abc123; csrf_token=xyz789; session=def456
+```
+
+**Alternative method (easier):**
+
+1. After logging in, open Network tab in Developer Tools
+2. Make any request to bullsconnect.usf.edu (refresh the page)
+3. Click on any request and look at the **Request Headers**
+4. Find the `Cookie:` header
+5. Copy the entire value after `Cookie: `
+6. Paste it into your `.env` file
+
+**Important Notes:**
+
+- **Each user needs their own cookie** - Cookies are tied to individual login sessions, so each person using the app needs to get their own cookie from their own Bulls Connect login
+- **Cookies expire** - Session cookies typically expire after a few hours or when you log out, so you may need to update this periodically
+- **For production use** - Consider implementing user authentication directly in the app so users can log in without manually copying cookies
+
+After updating your cookie, restart the server and click "Refresh" in the app.
+
 ### Step 4: Run the Application
 
 From the root directory, run both frontend and backend concurrently:
+
 ```bash
 npm run dev
 ```
@@ -115,11 +159,13 @@ npm run dev
 Or run them separately:
 
 **Terminal 1 - Backend:**
+
 ```bash
 npm run server
 ```
 
 **Terminal 2 - Frontend:**
+
 ```bash
 npm run client
 ```
@@ -132,9 +178,11 @@ npm run client
 ## API Endpoints
 
 ### GET /api/events
+
 Fetches all events from Bulls Connect with geocoded coordinates.
 
 **Response:**
+
 ```json
 [
   {
@@ -145,7 +193,7 @@ Fetches all events from Bulls Connect with geocoded coordinates.
     "category": "Meeting",
     "location": "Marshall Student Center",
     "coordinates": {
-      "lat": 28.0650,
+      "lat": 28.065,
       "lng": -82.4194,
       "name": "Marshall Student Center"
     },
@@ -158,6 +206,7 @@ Fetches all events from Bulls Connect with geocoded coordinates.
 ```
 
 ### GET /api/health
+
 Health check endpoint.
 
 ## How It Works
@@ -172,6 +221,7 @@ Health check endpoint.
 ## Known USF Locations
 
 The app includes a pre-configured dictionary of common USF campus locations:
+
 - Marshall Student Center (MSC)
 - Cooper Hall
 - USF Library
